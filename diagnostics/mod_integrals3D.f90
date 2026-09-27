@@ -205,11 +205,13 @@ real*8  :: source_neutral_arr(n_inj_max), source_neutral_drift_arr(n_inj_max)
 real*8  :: source_bg, source_imp, source_bg_drift, source_imp_drift
 real*8  :: source_bg_arr(n_inj_max), source_imp_arr(n_inj_max), source_bg_drift_arr(n_inj_max), source_imp_drift_arr(n_inj_max) 
 #endif
+real*8  :: local_radiation_bg, total_radiation_bg
+real*8  :: ne_SI, Te_eV, Te_corr_eV
 #if (defined WITH_Neutrals) || (defined WITH_Impurities)
-real*8  :: local_radiation, local_radiation_cooling, local_radiation_bg, local_E_ion, total_radiation, total_radiation_cooling, total_radiation_bg, total_E_ion, local_P_ei, total_P_ei
+real*8  :: local_radiation, local_radiation_cooling, local_E_ion, total_radiation, total_radiation_cooling, total_E_ion, local_P_ei, total_P_ei
 real*8  :: local_P_ion, total_P_ion
 real*8  :: local_radiation_phi(n_plane), local_radiation_cooling_phi(n_plane), total_radiation_phi(n_plane), total_radiation_cooling_phi(n_plane)
-real*8  :: ne_SI, Te_eV, Te_corr_eV, Ti_eV
+real*8  :: Ti_eV
 
 ! SPI-related variables
 integer    :: spi_i
@@ -267,10 +269,10 @@ real*8     :: LradDcont_corr, dLradDcont_dT_corr              ! LradDcont_T corr
 real*8     :: Arad_bg, Brad_bg, Crad_bg                       ! Retain hard-coded fitting for argon
 real*8     :: coef_prad_si                                    ! Prad,SI = coef_prad_si * Prad,jorek
 #endif
-
+integer    :: i_imp
+real*8     :: frad_bg, Lrad_imp
 #if (defined WITH_Neutrals) || (defined WITH_Impurities)
-integer    :: i_imp, i_phi                                    ! Loop for more than one background impurity
-real*8     :: frad_bg, Lrad_imp                               ! Retain hard-coded fitting for argon
+integer    :: i_phi                                    ! Loop for more than one background impurity
 #endif
 
 ! SAW energy functional (linear MHD)
@@ -394,11 +396,11 @@ local_Prb_cooling = 0.d0 ! Radiative cooling power (radiative energy lost from t
 local_aux_mom_par_int = 0.d0 
 local_aux_mom_par_ext = 0.d0 
 local_aux_mom_par_tot = 0.d0 
+local_radiation_bg = 0.d0
 
 #if (defined WITH_Neutrals) || (defined WITH_Impurities)
 local_radiation             = 0.d0 ! Radiation power (as would be measured by a bolometer, i.e. uses LradDCont_T)
 local_radiation_cooling     = 0.d0 ! Radiative cooling power (radiative energy lost from the plasma, i.e. uses LradDcont_corr)
-local_radiation_bg          = 0.d0
 local_radiation_phi         = 0.d0 ! see local_radiation
 local_radiation_cooling_phi = 0.d0 ! see local_radiation_cooling
 
@@ -469,6 +471,8 @@ Tie_min_neg = 0.5*T_min_neg
 #else
 !$omp           E_idx_kin,                                                                                    &
 #endif
+!$omp          n_adas, nimp_bg, use_imp_adas, local_radiation_bg,                                             &
+!$omp          imp_adas, imp_cor, imp_type,                                                                   &
 #if (defined WITH_Neutrals) || (defined WITH_Impurities)
 !$omp          spi_num_vol, local_source_volume, local_source_volume_drift, drift_distance,                   &
 !$omp          using_spi, n_spi_tot, n_inj, n_spi,                                                            &
@@ -476,11 +480,8 @@ Tie_min_neg = 0.5*T_min_neg
 !$omp          local_n_particles_inj, local_n_particles, ns_amplitude, ns_R, ns_Z,                            &
 !$omp          ns_phi, ns_radius, ns_deltaphi, ns_delta_minor_rad, ns_tor_norm, spi_tor_rot, local_E_ion,     &
 !$omp          t_now, A_Dmv, K_Dmv, V_Dmv, P_Dmv, t_ns, L_tube, JET_MGI,ASDEX_MGI, local_P_ion,               &
-!$omp          local_radiation, local_radiation_phi, imp_cor, imp_adas, imp_type, local_P_ei,                 &
-!$omp          n_adas, nimp_bg, local_radiation_cooling, local_radiation_cooling_phi, local_radiation_bg,     &
-#endif
-#if (defined WITH_Neutrals) && (!defined WITH_Impurities)
-!$omp          use_imp_adas,                                                                                  &
+!$omp          local_radiation, local_radiation_phi, local_P_ei,                                              &
+!$omp          local_radiation_cooling, local_radiation_cooling_phi,                                          &
 #endif
 #if (defined WITH_Impurities)
 !$omp          index_main_imp,                                                                                &
@@ -510,8 +511,9 @@ Tie_min_neg = 0.5*T_min_neg
 !$omp           aux_P0, aux_P0_s, aux_P0_t, aux_P0_p, aux_q0, aux_jx0, aux_jy0, aux_jz0, aux_jz0_pcs,         &
 !$omp           eta_T_ohm, rn0, rn0_corr, rimp0, rimp0_corr, Z_eff, lnA, alpha_e,                             &
 !$omp           aux_E0_Ti, aux_E0_Te, aux_E0,                                                                 &
+!$omp           i_imp, frad_bg, Lrad_imp, Te_corr_eV, Te_eV, ne_SI,                                           &
 #if (defined WITH_Neutrals) || (defined WITH_Impurities)
-!$omp           i_imp, frad_bg, Lrad_imp, Te_corr_eV, Te_eV, ne_SI, Ti_eV,                                    &
+!$omp           Ti_eV,                                                                                        &
 !$omp           spi_R_tmp, spi_Z_tmp, spi_phi_tmp, ns_radius_tmp,                                             &
 !$omp           spi_psi_tmp, spi_grad_psi_tmp, spi_i, i_inj,                                                  &
 !$omp           n_spi_tmp, source_tmp, ns_shape, ns_shape_drift,                                              &
@@ -935,6 +937,56 @@ aux_q0    = 0.d0; aux_jx0   = 0.d0; aux_jy0   = 0.d0; aux_jz0   = 0.d0; aux_jz0_
 !-------------------------------------------
 ! --- Radiation and ionization power
 ! ------------------------------------------
+#if (!defined WITH_Neutrals) && (!defined WITH_Impurities)
+
+        !--------------------------------------------------------
+        ! --- Radiation from background impurities
+        !     without evolved neutrals or impurities
+        !--------------------------------------------------------
+
+        ! Electron density in SI units
+        ne_SI = r0_corr * 1.d20 * central_density
+
+        ! Electron temperature in eV
+#ifdef WITH_TiTe
+        Te_corr_eV = Te0_corr / (EL_CHG * MU_ZERO * central_density * 1.d20)
+        Te_eV      = Te0      / (EL_CHG * MU_ZERO * central_density * 1.d20)
+#else
+        Te_corr_eV = 0.5d0 * T0_corr / (EL_CHG * MU_ZERO * central_density * 1.d20)
+        Te_eV      = 0.5d0 * T0      / (EL_CHG * MU_ZERO * central_density * 1.d20)
+#endif
+
+        ! Background impurity radiation from ADAS
+        frad_bg = 0.d0
+
+        if (use_imp_adas) then
+          do i_imp = 1, n_adas
+
+            if (ne_SI > ne_SI_min .and. &
+                Te_eV > Te_eV_min .and. &
+                nimp_bg(i_imp) > 0.d0) then
+
+              Lrad_imp = 0.d0
+
+              call radiation_function_linear( &
+                   imp_adas(i_imp), imp_cor(i_imp), &
+                   log10(ne_SI), &
+                   log10(Te_corr_eV * EL_CHG / K_BOLTZ), &
+                   .false., Lrad_imp )
+
+            else
+              Lrad_imp = 0.d0
+            endif
+
+            frad_bg = frad_bg + nimp_bg(i_imp) * Lrad_imp
+
+          enddo
+        endif
+
+        local_radiation_bg = local_radiation_bg &
+             + ne_SI * frad_bg * bigR * xjac * wst * delta_phi
+
+#endif
 #if ( (defined WITH_Neutrals) && (! defined WITH_Impurities) )
         ! --- Get ionization, recombination and radiation coefficients for Deuterium 
 #ifdef WITH_TiTe
@@ -2205,10 +2257,10 @@ call MPI_AllReduce(local_aux_mom_par_int,aux_mom_par_int,1,MPI_DOUBLE_PRECISION,
 call MPI_AllReduce(local_aux_mom_par_ext,aux_mom_par_ext,1,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,ierr)
 call MPI_AllReduce(local_aux_mom_par_tot,aux_mom_par_tot,1,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,ierr)
 
+call MPI_AllReduce(local_radiation_bg, total_radiation_bg,1,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,ierr)
 #if (defined WITH_Neutrals) || (defined WITH_Impurities)
 call MPI_AllReduce(local_radiation, total_radiation,1,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,ierr)
 call MPI_AllReduce(local_radiation_cooling, total_radiation_cooling,1,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,ierr)
-call MPI_AllReduce(local_radiation_bg, total_radiation_bg,1,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,ierr)
 call MPI_AllReduce(local_E_ion, total_E_ion,1,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,ierr)
 call MPI_AllReduce(local_P_ei, total_P_ei,1,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,ierr)
 call MPI_AllReduce(local_P_ion, total_P_ion,1,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,ierr)
@@ -2293,10 +2345,10 @@ aux_mom_par_int = local_aux_mom_par_int
 aux_mom_par_ext = local_aux_mom_par_ext
 aux_mom_par_tot = local_aux_mom_par_tot
 
+total_radiation_bg          = local_radiation_bg
 #if (defined WITH_Neutrals) || (defined WITH_Impurities)
 total_radiation             = local_radiation
 total_radiation_cooling     = local_radiation_cooling
-total_radiation_bg          = local_radiation_bg
 total_E_ion                 = local_E_ion
 total_P_ei                  = local_P_ei
 total_P_ion                 = local_P_ion
@@ -2448,10 +2500,10 @@ aux_mom_par_int      = n_period * aux_mom_par_int * rho_norm / t_norm
 aux_mom_par_ext      = n_period * aux_mom_par_ext * rho_norm / t_norm
 aux_mom_par_tot      = n_period * aux_mom_par_tot * rho_norm / t_norm
 
+total_radiation_bg          = n_period * total_radiation_bg
 #if (defined WITH_Neutrals) || (defined WITH_Impurities)
 total_radiation             = n_period * total_radiation
 total_radiation_cooling     = n_period * total_radiation_cooling
-total_radiation_bg          = n_period * total_radiation_bg
 total_radiation_phi         = n_period * total_radiation_phi
 total_radiation_cooling_phi = n_period * total_radiation_cooling_phi
 total_E_ion                 = n_period * total_E_ion
@@ -2705,12 +2757,11 @@ if (my_id .eq. 0) then
       case ( 'saw_ene' )
         res(iexpr) = saw_energy_tot
 
+      case ( 'Rad_bg_tot' )
+        res(iexpr) = total_radiation_bg
 #if (defined WITH_Neutrals) || (defined WITH_Impurities)
       case ( 'Rad_tot' )
         res(iexpr) = total_radiation
-
-      case ( 'Rad_bg_tot' )
-        res(iexpr) = total_radiation_bg
 #endif
 
       case ( 'P_vn' )
