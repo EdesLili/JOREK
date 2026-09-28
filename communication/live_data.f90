@@ -602,7 +602,7 @@ module live_data
 #if (defined WITH_Neutrals) || (defined WITH_Impurities)
     write(LIVE_DATA_HANDLE,'(A,I5)') '@n_dissipative_terms: ', 6
 #else
-    write(LIVE_DATA_HANDLE,'(A,I5)') '@n_dissipative_terms: ', 4
+    write(LIVE_DATA_HANDLE,'(A,I5)') '@n_dissipative_terms: ', 5
 #endif
     write(LIVE_DATA_HANDLE,'(A)') '@dissipative_terms_xlabel: normalized time'
     write(LIVE_DATA_HANDLE,'(A)') '@dissipative_terms_xlabel_si: time [ms]'
@@ -616,7 +616,7 @@ module live_data
                                                     "Parallel viscosity power"  "Radiated power"  "Ionization power"'
 #else
     write(LIVE_DATA_HANDLE,'(A)') '@dissipative_terms: %"time"         "Ohmic power"   "Frictional heating"   "Perp. viscosity power"  &
-                                                    "Parallel viscosity power" '
+                                                    "Parallel viscosity power" "Radiated power"'
 #endif
     write(LIVE_DATA_HANDLE,*)
 
