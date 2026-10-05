@@ -190,6 +190,15 @@ subroutine read_num_profiles(my_id)
     Phi_0 = num_Phi_y0(1)
     num_phi_y0 = num_phi_y0 - phi_1
   end if
+
+  ! TODO: adapt code to load variable number of files
+  ! Probably requires "pointer to pointer" style array of data
+  num_nimp_bg(1) = ( nimp_bg_file(1) /= 'none' )
+  if ( num_nimp_bg(1) .and. ( my_id == 0 ) ) then
+    call readProf(num_nimp_bg_x, num_nimp_bg_y0, num_nimp_bg_len(1), nimp_bg_file(1)) !read this function
+    call check_num_prof(num_nimp_bg(1), num_nimp_bg_x, num_nimp_bg_y0, num_nimp_bg_len(1), 'nimp_bg', check_positive=.true.)
+    print *, 'DEBUG: loaded nimp_bg file successfully.'
+  end if
   
   contains
   
