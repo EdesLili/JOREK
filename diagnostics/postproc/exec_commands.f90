@@ -3247,7 +3247,7 @@ module exec_commands
       ! --- Read ADAS data and generate coronal equilibrium if needed
       call init_imp_adas(my_id)
 #else
-      if (use_imp_adas .and. (nimp_bg(1) > 0.d0)) then
+      if (use_imp_adas .and. ((nimp_bg(1) > 0.d0) .or. (nimp_bg_file(1) /= 'none'))) then
         call init_imp_adas(my_id)
       endif
 #endif
