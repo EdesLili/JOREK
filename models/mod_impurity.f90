@@ -84,6 +84,43 @@ module mod_impurity
 
   end subroutine init_imp_adas
 
+  ! TODO: function or subroutine?
+  pure real*8 function nimp_bg_density(i_imp, Psi_N)
+
+    use phys_module
+
+    implicit none
+
+    integer, intent(in) :: i_imp        !< Index of impurity
+    real*8, intent(in)  :: Psi_N      !< Psi_N coordinate to sample
+    real*8              :: rho_imp  !< Impurity density
+    real*8              :: aux1, aux2
+    integer             :: left, mid, right
+
+    if  ( .not. num_nimp_bg(i_imp) ) then
+      ! Previous behavior, uniform density
+      nimp_bg_density = nimp_bg(i_imp)
+    else
+      ! New non uniform from numerical profile
+      ! Taken from models/density.f90:74
+      left  = 1
+      right = num_nimp_bg_len(i_imp)
+      do
+        if ( right == left + 1 ) exit
+        mid = (left + right) / 2
+        if ( num_nimp_bg_x(mid) >= Psi_N ) then
+          right = mid
+        else
+          left = mid
+        end if
+      end do
+      aux1 = (Psi_N - num_nimp_bg_x(left)) / (num_nimp_bg_x(right) - num_nimp_bg_x(left))
+      aux2 = (1. - aux1)
+      nimp_bg_density = num_nimp_bg_y0(left) * aux2 + num_nimp_bg_y0(right) * aux1
+    end if
+
+  end function nimp_bg_density
+
   subroutine radiation_function(ad,cor, density, temperature, Lrad, dLrad_dTe, dLrad_dNe)
 
     use phys_module

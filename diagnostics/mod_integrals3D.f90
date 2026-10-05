@@ -30,7 +30,7 @@ module mod_integrals3D
   use mod_injection_source, only: total_imp_source, total_n_particles, total_n_particles_inj, total_n_particles_inj_all
   use mod_source_shape, only: source_shape
 #endif
-  use mod_impurity, only: radiation_function, radiation_function_linear
+  use mod_impurity, only: radiation_function, radiation_function_linear, nimp_bg_density
   use equil_info, only : get_psi_n, ES
   use mod_atomic_coeff_deuterium, only: rec_rate_to_kinetic, atomic_coeff_deuterium
   use mod_sources
@@ -961,18 +961,28 @@ aux_q0    = 0.d0; aux_jx0   = 0.d0; aux_jy0   = 0.d0; aux_jz0   = 0.d0; aux_jz0_
           Te_eV = 0.5d0* T0/(EL_CHG*MU_ZERO*central_density*1.d20)  ! Te in eV, uncorrected
         endif
 
+        ! Compute Psi_N once
+        ! TODO: check if side effects? psi_n was not used here previously
+        ! Done like this further bellow.
+        ! #if STELLARATOR_MODEL
+        !         if (s_norm(ms,mt) <= 1.d0) then       ! Inside LCFS
+        ! #else
+        !         if ( get_psi_n(psi_as_coord, y_g(mp,ms,mt)) <= 1.d0 ) then   !inside LCFS
+        ! #endif
+        psi_n = get_psi_n(psi_as_coord, y_g(mp,ms,mt))
+
         if (use_imp_adas) then  ! use open adas by default  
           ! Use radiation coefficients from ADAS
           frad_bg = 0. 
           do i_imp = 1, n_adas     
-            if (ne_SI > ne_SI_min .and. Te_eV > Te_eV_min .and. nimp_bg(i_imp) > 0) then
+            if (ne_SI > ne_SI_min .and. Te_eV > Te_eV_min .and. nimp_bg_density(i_imp, psi_n) > 0) then
               Lrad_imp = 0.0
               call radiation_function_linear(imp_adas(i_imp),imp_cor(i_imp),log10(ne_SI),    & 
                                            log10(Te_corr_eV*EL_CHG/K_BOLTZ),.false.,Lrad_imp)           
             else     
               Lrad_imp = 0.
             end if
-            frad_bg = frad_bg + nimp_bg(i_imp) * Lrad_imp
+            frad_bg = frad_bg + nimp_bg_density(i_imp, psi_n) * Lrad_imp
           end do
 
           local_radiation_phi(mp)         = local_radiation_phi(mp) + ( (r0_corr * rn0_corr  * LradDrays_T    &
@@ -1133,14 +1143,15 @@ aux_q0    = 0.d0; aux_jx0   = 0.d0; aux_jy0   = 0.d0; aux_jz0   = 0.d0; aux_jz0_
         frad_bg = 0. 
         do i_imp = 1, n_adas     
           if (i_imp == index_main_imp) cycle
-          if (ne_SI > ne_SI_min .and. Te_eV > Te_eV_min .and. nimp_bg(i_imp) > 0) then
+          ! NOTE: reusing previously computed psi_n
+          if (ne_SI > ne_SI_min .and. Te_eV > Te_eV_min .and. nimp_bg_density(i_imp, psi_n) > 0) then
             Lrad_imp = 0.0
             call radiation_function_linear(imp_adas(i_imp),imp_cor(i_imp),log10(ne_SI),    & 
                                          log10(Te_eV*EL_CHG/K_BOLTZ),.false.,Lrad_imp)           
           else     
             Lrad_imp = 0.
           end if
-          frad_bg = frad_bg + nimp_bg(i_imp) * Lrad_imp
+          frad_bg = frad_bg + nimp_bg_density(i_imp, psi_n) * Lrad_imp
         end do
 
         local_radiation_phi(mp) = local_radiation_phi(mp) &
