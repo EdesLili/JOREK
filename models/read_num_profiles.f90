@@ -191,15 +191,15 @@ subroutine read_num_profiles(my_id)
     num_phi_y0 = num_phi_y0 - phi_1
   end if
 
-  ! TODO: adapt code to load variable number of files
-  ! Probably requires "pointer to pointer" style array of data
-  num_nimp_bg(1) = ( nimp_bg_file(1) /= 'none' )
-  if ( num_nimp_bg(1) .and. ( my_id == 0 ) ) then
-    call readProf(num_nimp_bg_x, num_nimp_bg_y0, num_nimp_bg_len(1), nimp_bg_file(1)) !read this function
-    call check_num_prof(num_nimp_bg(1), num_nimp_bg_x, num_nimp_bg_y0, num_nimp_bg_len(1), 'nimp_bg', check_positive=.true.)
-    print *, 'DEBUG: loaded nimp_bg file successfully.'
+  num_nimp_bg = ( nimp_bg_file /= 'none' )
+  if ( num_nimp_bg .and. ( my_id == 0 ) ) then
+    ! use "Neo" to read 3 column file, 2 profiles specified
+    call readProfNeo(num_nimp_bg_x, num_nimp_bg_prof1, num_nimp_bg_prof2, num_nimp_bg_len, nimp_bg_file) 
+    call check_num_prof(num_nimp_bg, num_nimp_bg_x, num_nimp_bg_prof1, num_nimp_bg_len, 'nimp_bg', check_positive=.true.)
+    call check_num_prof(num_nimp_bg, num_nimp_bg_x, num_nimp_bg_prof2, num_nimp_bg_len, 'nimp_bg', check_positive=.true.)
+    write(*, *), 'DEBUG: loaded nimp_bg file successfully.'
   end if
-  
+
   contains
   
   

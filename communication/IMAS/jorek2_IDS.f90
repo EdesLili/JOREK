@@ -122,7 +122,7 @@ program jorek2_IDS
     ! --- Read ADAS data and generate coronal equilibrium if needed
     call init_imp_adas(0)
 #else
-    if (use_imp_adas .and. ((nimp_bg(1) > 0.d0) .or. (nimp_bg_file(1) /= 'none'))) then
+    if (use_imp_adas .and. (nimp_bg(1) > 0.d0)) then
       call init_imp_adas(0)
     endif
 #endif
