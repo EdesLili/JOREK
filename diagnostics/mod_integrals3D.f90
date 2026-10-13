@@ -498,7 +498,7 @@ Tie_min_neg = 0.5*T_min_neg
 !$omp           wst, BigR, r0, T0, Te0, zj0, ps0, dTdx, dTdy, drhodx, drhody, dpsidx, dpsidy, dpsidp, dudx, dudy,dudp,  &
 !$omp           dpsidx_3d, dpsidy_3d, saw_ene_dens, BB2_zero, r0_s, r0_t, r0_p,                               &
 !$omp           w0, dwdx, dwdy, u0_xpp, u0_ypp, visco_T, visco_fact_old, visco_fact_new,                      &
-!$omp           dpdx, dpdy, phi, Ti0, psi_as_coord, vprp_disp,                                                &
+!$omp           dpdx, dpdy, phi, Ti0, psi_as_coord, psi_n, vprp_disp,                                      &
 !$omp           source_pellet, source_volume, eq_zne, eq_zTe, vpar0, BB2, chi, Bv2,                           &
 !$omp           heat_source, heat_source_i, heat_source_e, particle_source, current_source, rotation_source,  &
 !$omp           dn_dpsi,dn_dz,dn_dpsi2,dn_dz2,dn_dpsi_dz,dn_dpsi3,dn_dpsi_dz2, dn_dpsi2_dz,                   &
