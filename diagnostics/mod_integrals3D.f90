@@ -983,6 +983,7 @@ aux_q0    = 0.d0; aux_jx0   = 0.d0; aux_jy0   = 0.d0; aux_jz0   = 0.d0; aux_jz0_
 #endif
 
         ! Background impurity radiation from ADAS
+        psi_n = get_psi_n(psi_as_coord, y_g(mp,ms,mt))
         frad_bg = 0.d0
 
         if (use_imp_adas) then
@@ -990,7 +991,7 @@ aux_q0    = 0.d0; aux_jx0   = 0.d0; aux_jy0   = 0.d0; aux_jz0   = 0.d0; aux_jz0_
 
             if (ne_SI > ne_SI_min .and. &
                 Te_eV > Te_eV_min .and. &
-                nimp_bg(i_imp) > 0.d0) then
+                nimp_bg_density(i_imp, psi_n) > 0.d0) then
 
               Lrad_imp = 0.d0
 
@@ -1004,7 +1005,7 @@ aux_q0    = 0.d0; aux_jx0   = 0.d0; aux_jy0   = 0.d0; aux_jz0   = 0.d0; aux_jz0_
               Lrad_imp = 0.d0
             endif
 
-            frad_bg = frad_bg + nimp_bg(i_imp) * Lrad_imp
+            frad_bg = frad_bg + nimp_bg_density(i_imp, psi_n) * Lrad_imp
 
           enddo
         endif
@@ -1039,14 +1040,6 @@ aux_q0    = 0.d0; aux_jx0   = 0.d0; aux_jy0   = 0.d0; aux_jz0   = 0.d0; aux_jz0_
           Te_eV = 0.5d0* T0/(EL_CHG*MU_ZERO*central_density*1.d20)  ! Te in eV, uncorrected
         endif
 
-        ! Compute Psi_N once
-        ! TODO: check if side effects? psi_n was not used here previously
-        ! Done like this further bellow.
-        ! #if STELLARATOR_MODEL
-        !         if (s_norm(ms,mt) <= 1.d0) then       ! Inside LCFS
-        ! #else
-        !         if ( get_psi_n(psi_as_coord, y_g(mp,ms,mt)) <= 1.d0 ) then   !inside LCFS
-        ! #endif
         psi_n = get_psi_n(psi_as_coord, y_g(mp,ms,mt))
 
         if (use_imp_adas) then  ! use open adas by default  
@@ -1219,9 +1212,9 @@ aux_q0    = 0.d0; aux_jx0   = 0.d0; aux_jy0   = 0.d0; aux_jz0   = 0.d0; aux_jz0_
         E_ion = E_ion * m_i_over_m_imp
 
         frad_bg = 0. 
+        psi_n = get_psi_n(psi_as_coord, y_g(mp,ms,mt))
         do i_imp = 1, n_adas     
           if (i_imp == index_main_imp) cycle
-          ! NOTE: reusing previously computed psi_n
           if (ne_SI > ne_SI_min .and. Te_eV > Te_eV_min .and. nimp_bg_density(i_imp, psi_n) > 0) then
             Lrad_imp = 0.0
             call radiation_function_linear(imp_adas(i_imp),imp_cor(i_imp),log10(ne_SI),    & 

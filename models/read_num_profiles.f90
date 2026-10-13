@@ -197,7 +197,6 @@ subroutine read_num_profiles(my_id)
     call readProfNeo(num_nimp_bg_x, num_nimp_bg_prof1, num_nimp_bg_prof2, num_nimp_bg_len, nimp_bg_file) 
     call check_num_prof(num_nimp_bg, num_nimp_bg_x, num_nimp_bg_prof1, num_nimp_bg_len, 'nimp_bg', check_positive=.true.)
     call check_num_prof(num_nimp_bg, num_nimp_bg_x, num_nimp_bg_prof2, num_nimp_bg_len, 'nimp_bg', check_positive=.true.)
-    write(*, *), 'DEBUG: loaded nimp_bg file successfully.'
   end if
 
   contains

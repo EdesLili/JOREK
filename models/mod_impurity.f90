@@ -86,7 +86,6 @@ module mod_impurity
 
   end subroutine init_imp_adas
 
-  ! TODO: function or subroutine?
   pure real*8 function nimp_bg_density(i_imp, Psi_N)
 
     use phys_module
@@ -129,7 +128,7 @@ module mod_impurity
         leftvalue = num_nimp_bg_prof2(left)
         rightvalue = num_nimp_bg_prof2(right)
       else
-        ! TODO: error handling, default to uniform?
+        ! Unknown profile type, fall back to uniform
         leftvalue = 1.d0
         rightvalue = 1.d0
       end if

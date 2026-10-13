@@ -147,7 +147,6 @@ if ( num_Phi ) then
   call MPI_BCAST(num_Phi_y3,num_Phi_len,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
 end if
 
-! TODO: support multiple impurity profiles
 if ( num_nimp_bg ) then
   call MPI_BCAST(num_nimp_bg_len,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr) 
   if ( my_id /= 0 ) then
