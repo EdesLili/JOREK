@@ -99,11 +99,8 @@ module mod_impurity
     integer             :: left, mid, right
     real*8              :: leftvalue, rightvalue
 
-    if  ( .not. num_nimp_bg ) then
+    if  ( .not. num_nimp_bg .or. nimp_bg_profile_type(i_imp) == 0 ) then
       ! Previous behavior, uniform density
-      nimp_bg_density = nimp_bg(i_imp)
-    else if ( nimp_bg_profile_type(i_imp) == 0 ) then
-      ! Use uniform profile anyway
       nimp_bg_density = nimp_bg(i_imp)
     else
       ! New non uniform from numerical profile
