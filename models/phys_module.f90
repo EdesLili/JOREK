@@ -479,8 +479,8 @@ module phys_module
   integer             :: num_nimp_bg_len                   !< Number of points in nimp_bg profile
   integer             :: nimp_bg_profile_type(n_imp_max)   !< Select profile for each impurity (0: uniform, 1: profile1, 2: profile2)
   real*8, allocatable :: num_nimp_bg_x(:)                  !< Psi_N values of nimp_bg profile points
-  real*8, allocatable :: num_nimp_bg_prof1(:)              !< Density values of nimp_bg profile, (in \f$m^{-4}\f$)
-  real*8, allocatable :: num_nimp_bg_prof2(:)              !< Density values of nimp_bg profile, (in \f$m^{-4}\f$)
+  real*8, allocatable :: num_nimp_bg_prof1(:)              !< Density values of nimp_bg profile, (in \f$m^{-3}\f$)
+  real*8, allocatable :: num_nimp_bg_prof2(:)              !< Density values of nimp_bg profile, (in \f$m^{-3}\f$)
 
   !> @name Shattered Pellet Injection related input parameters
   ! Note that the SPI share many of the MGI parameters. The code should return to simple MGI upon using_spi = false
